@@ -1,0 +1,21 @@
+{
+    "model_file": "iris_pipeline.joblib",
+    "trained_on": "2025-08-16T16:11:28.630291",
+    "dataset": "Iris",
+    "n_samples_train": 120,
+    "n_samples_test": 30,
+    "best_params": {
+        "clf__l2_regularization": 1.0,
+        "clf__learning_rate": 0.05,
+        "clf__max_depth": null,
+        "pca__n_components": 3,
+        "select__k": 3
+    },
+    "cv_accuracy": 0.9583333333333334,
+    "test_accuracy": 0.9666666666666667,
+    "library_versions": {
+        "scikit-learn": "1.7.1",
+        "numpy": "2.3.2",
+        "joblib": "1.5.1"
+    }
+}
