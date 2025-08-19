@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware   # 👈 Importante
 from pydantic import BaseModel
 import joblib
 import json
@@ -15,6 +16,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# ====== CORS ======
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # 👈 en producción pon aquí el dominio de tu frontend (ej: "http://localhost:5173")
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 BASE_MODELS_DIR = os.path.join(os.path.dirname(__file__), "..", "models")
 
 AVAILABLE_MODELS = {
@@ -26,12 +36,12 @@ AVAILABLE_MODELS = {
     "titanic": {
         "model_path": os.path.join(BASE_MODELS_DIR, "titanic", "titanic_pipeline.joblib"),
         "metadata_path": os.path.join(BASE_MODELS_DIR, "titanic", "titanic_metadata.json"),
-        "features": ["age","pclass","who"]
+        "features": ["age", "pclass", "who"]
     },
     "penguins": {
         "model_path": os.path.join(BASE_MODELS_DIR, "penguins", "penguins_pipeline.joblib"),
         "metadata_path": os.path.join(BASE_MODELS_DIR, "penguins", "penguins_metadata.json"),
-        "features": []   # definan sus estructiras que neecsiten
+        "features": []
     }
 }
 
@@ -56,7 +66,7 @@ class PenguinsRequest(BaseModel):
 
 class TitanicRequest(BaseModel):
     age: float
-    pclass: int
+    pclass: float
     who: str  # "man", "woman", "child"
 
 
@@ -141,7 +151,7 @@ def predict_titanic(request: TitanicRequest):
 
     return {
         "prediction": int(prediction[0]),  # 0 = murio, 1 = sobrevivio
-        "probabilities": probabilities     # [[prob_murio, prob_sobrevivio]]
+        "probabilities": probabilities
     }
 
 
