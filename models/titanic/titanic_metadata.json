@@ -1,0 +1,19 @@
+{
+    "model_file": "titanic_pipeline.joblib",
+    "trained_on": "2025-08-19T00:53:25.331492",
+    "dataset": "Titanic (subset: ['pclass','who','age'])",
+    "n_samples_train": 712,
+    "n_samples_test": 179,
+    "best_params": {
+        "clf__C": 0.1,
+        "clf__penalty": "l2",
+        "clf__solver": "saga"
+    },
+    "cv_accuracy": 0.803407859745888,
+    "test_accuracy": 0.776536312849162,
+    "library_versions": {
+        "scikit-learn": "1.7.1",
+        "numpy": "2.3.2",
+        "joblib": "1.5.1"
+    }
+}

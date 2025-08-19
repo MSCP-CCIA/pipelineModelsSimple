@@ -5,6 +5,8 @@ import json
 import os
 import numpy as np
 from sklearn.datasets import load_iris
+import pandas as pd
+
 
 app = FastAPI(
     title="ML Models API",
@@ -23,7 +25,7 @@ AVAILABLE_MODELS = {
     "titanic": {
         "model_path": os.path.join(BASE_MODELS_DIR, "titanic", "titanic_pipeline.joblib"),
         "metadata_path": os.path.join(BASE_MODELS_DIR, "titanic", "titanic_metadata.json"),
-        "features": []  # definan sus estructiras que neecsiten
+        "features": ["age","pclass","who"]
     },
     "penguins": {
         "model_path": os.path.join(BASE_MODELS_DIR, "penguins", "penguins_pipeline.joblib"),
@@ -40,6 +42,10 @@ class IrisRequest(BaseModel):
     petal_length: float
     petal_width: float
 
+class TitanicRequest(BaseModel):
+    age: float
+    pclass: int
+    who: str # "man", "woman", "child"
 
 # ====== Endpoints ======
 
@@ -94,4 +100,33 @@ def predict_iris(request: IrisRequest):
     return {
         "prediction": iris.target_names[prediction][0],
         "probabilities": probabilities
+    }
+
+@app.post("/predict/titanic")
+def predict_titanic(request: TitanicRequest):
+    model_name = "titanic"
+    model_path = AVAILABLE_MODELS[model_name]["model_path"]
+
+    if not os.path.exists(model_path):
+        raise HTTPException(status_code=404, detail="Model file not found")
+    if model_name not in LOADED_MODELS:
+        LOADED_MODELS[model_name] = joblib.load(model_path)
+
+    model = LOADED_MODELS[model_name]
+
+    features = pd.DataFrame([{
+        "pclass": request.pclass,
+        "who": request.who,
+        "age": request.age
+    }])
+
+    try:
+        prediction = model.predict(features).tolist()
+        probabilities = model.predict_proba(features).tolist()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Prediction failed: {e}")
+
+    return {
+        "prediction": int(prediction[0]),  # 0 = murio, 1 = sobrevivio
+        "probabilities": probabilities     # [[prob_murio, prob_sobrevivio]]
     }
