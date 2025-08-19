@@ -4,6 +4,7 @@ import joblib
 import json
 import os
 import numpy as np
+import seaborn as sns
 from sklearn.datasets import load_iris
 import pandas as pd
 
@@ -36,19 +37,30 @@ AVAILABLE_MODELS = {
 
 LOADED_MODELS = {}
 
+
 class IrisRequest(BaseModel):
     sepal_length: float
     sepal_width: float
     petal_length: float
     petal_width: float
 
+
+class PenguinsRequest(BaseModel):
+    species: str
+    island: str
+    bill_length_mm: float
+    bill_depth_mm: float
+    flipper_length_mm: float
+    body_mass_g: float
+
+
 class TitanicRequest(BaseModel):
     age: float
     pclass: int
-    who: str # "man", "woman", "child"
+    who: str  # "man", "woman", "child"
+
 
 # ====== Endpoints ======
-
 @app.get("/")
 def root():
     return {"message": "Bienvenidos a ML Models API"}
@@ -102,6 +114,7 @@ def predict_iris(request: IrisRequest):
         "probabilities": probabilities
     }
 
+
 @app.post("/predict/titanic")
 def predict_titanic(request: TitanicRequest):
     model_name = "titanic"
@@ -129,4 +142,37 @@ def predict_titanic(request: TitanicRequest):
     return {
         "prediction": int(prediction[0]),  # 0 = murio, 1 = sobrevivio
         "probabilities": probabilities     # [[prob_murio, prob_sobrevivio]]
+    }
+
+
+@app.post("/predict/penguins")
+def predict_penguins(request: PenguinsRequest):
+    penguins = sns.load_dataset('penguins')
+    model_name = "penguins"
+    model_path = AVAILABLE_MODELS[model_name]["model_path"]
+
+    if not os.path.exists(model_path):
+        raise HTTPException(status_code=404, detail="Model file not found")
+    if model_name not in LOADED_MODELS:
+        LOADED_MODELS[model_name] = joblib.load(model_path)
+
+    model = LOADED_MODELS[model_name]
+    features = pd.DataFrame([{
+        "species": request.species,
+        "island": request.island,
+        "bill_length_mm": request.bill_length_mm,
+        "bill_depth_mm": request.bill_depth_mm,
+        "flipper_length_mm": request.flipper_length_mm,
+        "body_mass_g": request.body_mass_g
+    }])
+
+    try:
+        prediction = model.predict(features).tolist()
+        probabilities = model.predict_proba(features).tolist()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Prediction failed: {e}")
+
+    return {
+        "prediction": prediction[0],
+        "probabilities": probabilities
     }
